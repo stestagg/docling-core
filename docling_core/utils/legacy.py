@@ -162,6 +162,11 @@ def docling_document_to_legacy(doc: DoclingDocument, fallback_filaname: str = "f
                 else:
                     text = item.text
 
+                # skip captions of they are embedded in the actual
+                # floating object
+                if item_type == DocItemLabel.CAPTION and text in embedded_captions:
+                    continue
+
                 # Can be empty.
                 prov = [
                     Prov(
@@ -179,11 +184,6 @@ def docling_document_to_legacy(doc: DoclingDocument, fallback_filaname: str = "f
                         prov=prov,
                     )
                 )
-
-                # skip captions of they are embedded in the actual
-                # floating object
-                if item_type == DocItemLabel.CAPTION and text in embedded_captions:
-                    continue
 
             elif isinstance(item, TableItem) and item.data:
                 index = len(tables)
