@@ -273,6 +273,9 @@ class TextCell(ColorMixin, OrderedElement):
     confidence: float = 1.0
     from_ocr: bool
 
+    id: int
+    member_ids: set[int]
+
     def to_bounding_box(self) -> BoundingBox:
         """Convert the cell rectangle to a BoundingBox."""
         return self.rect.to_bounding_box()
@@ -538,6 +541,35 @@ class SegmentedPdfPage(SegmentedPage):
             if cell_bbox.intersection_over_self(bbox) > ios:
                 cells.append(pc)
         return cells
+    
+    def cells_by_id(self):
+        res = {}
+        for cell in self.char_cells + self.word_cells + self.textline_cells:
+            if cell.id in res:
+                existing = res[cell.id]
+                if existing.text != cell.text or existing.member_ids != cell.member_ids:
+                    logging.warning(
+                        f"Cell ID {cell.id} has conflicting text or member IDs: "
+                        f"{existing.text} vs {cell.text}, "
+                        f"{existing.member_ids} vs {cell.member_ids}"
+                    )
+                if existing.rect != cell.rect:
+                    if existing.rect.coord_origin != cell.rect.coord_origin:
+                        # Maybe they are the same, but the origins are different:
+                        existing_test = existing.rect.to_bottom_left_origin(self.dimension.height)
+                        cell_test = cell.rect.to_bottom_left_origin(self.dimension.height)
+                    else:
+                        existing_test = existing.rect
+                        cell_test = cell.rect
+
+                    overlap = existing_test.to_bounding_box().intersection_over_self(cell_test.to_bounding_box())
+                    if overlap < 0.9:
+                        logging.warning(
+                            f"Cell ID {cell.id} has conflicting rectangles: "
+                            f"{existing_test} vs {cell_test}: {overlap:.2f} overlap"
+                        )
+            res[cell.id] = cell
+        return res
 
     def export_to_dict(self) -> Dict[str, Any]:
         """Export the page data to a dictionary.

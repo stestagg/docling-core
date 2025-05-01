@@ -326,7 +326,8 @@ class TableCell(BaseModel):
 class TableData(BaseModel):  # TBD
     """BaseTableData."""
 
-    table_cells: List[TableCell] = []
+    table_cells: List[TableCell] = Field(default_factory=list)
+    unassigned: List[List[BaseModel]] = Field(default_factory=list)
     num_rows: int = 0
     num_cols: int = 0
 
@@ -546,7 +547,7 @@ class DocTagsPage(BaseModel):
 class DocTagsDocument(BaseModel):
     """DocTagsDocument."""
 
-    pages: List[DocTagsPage] = []
+    pages: List[DocTagsPage] = Field(default_factory=list)
 
     @classmethod
     def from_doctags_and_image_pairs(
@@ -626,7 +627,7 @@ class NodeItem(BaseModel):
 
     self_ref: str = Field(pattern=_JSON_POINTER_REGEX)
     parent: Optional[RefItem] = None
-    children: List[RefItem] = []
+    children: List[RefItem] = Field(default_factory=list)
 
     content_layer: ContentLayer = ContentLayer.BODY
 
@@ -762,7 +763,7 @@ class DocItem(
     """DocItem."""
 
     label: DocItemLabel
-    prov: List[ProvenanceItem] = []
+    prov: List[ProvenanceItem] = Field(default_factory=list)
 
     def get_location_tokens(
         self,
@@ -961,9 +962,9 @@ class ListItem(TextItem):
 class FloatingItem(DocItem):
     """FloatingItem."""
 
-    captions: List[RefItem] = []
-    references: List[RefItem] = []
-    footnotes: List[RefItem] = []
+    captions: List[RefItem] = Field(default_factory=list)
+    references: List[RefItem] = Field(default_factory=list)
+    footnotes: List[RefItem] = Field(default_factory=list)
     image: Optional[ImageRef] = None
 
     def caption_text(self, doc: "DoclingDocument") -> str:
